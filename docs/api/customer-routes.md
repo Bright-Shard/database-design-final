@@ -1,0 +1,236 @@
+This document describes the customer API endpoints for NormFlix.
+
+
+
+
+
+# `/accounts/*` Endpoints
+
+These endpoints are for account management.
+
+
+
+## `POST /accounts/new`
+
+Create a new NormFlix account.
+
+### Request Headers
+
+No headers are necessary for this endpoint.
+
+### Request Body
+
+```json
+{
+	"username": {
+		"description": "The username for the new account.",
+		"type": "string"
+	},
+	"password": {
+		"description": "The password for the new account. The password can be transmitted in plaintext; in prod, this will be protected by HTTPS, and the server hashes the password as soon as it receives it.",
+		"type": "string"
+	},
+	"email": {
+		"description": "An email address that can be used to contact the owner of this account.",
+		"type": "email"
+	}
+}
+```
+
+### Response
+
+If the request is successful, the server will respond with `HTTP 200/OK`. If the username or email for the account is already used, the server will respond with `HTTP 409/CONFLICT`, with this body:
+
+```json
+{
+	"conflicting_item": {
+		"description": "Whether the username, email address, or both have already been used for another NormFlix account.",
+		"enum": ["email", "username", "both"]
+	}
+}
+```
+
+
+
+## `POST /accounts/token`
+
+Login to an account and create a new bearer token for that account. That bearer token can then be used for authentication with any other API endpoints that need it.
+
+### Request Headers
+
+No headers are necessary for this endpoint.
+
+### Request Body
+
+```json
+{
+	"username": {
+		"description": "The username of the account to login to & generate a new API key for.",
+		"type": "string"
+	},
+	"password_hash": {
+		"description": "The hash of the user's password to authenticate with.",
+		"type": "string"
+	}
+}
+```
+
+### Response
+
+If the request is successful, the server will respond with `HTTP 200/OK`, with this body:
+
+```json
+{
+	"bearer_token": {
+		"description": "The new bearer token for the account.",
+		"type": "string"
+	}
+}
+```
+
+If the request used bad credentials, the server will respond with `HTTP 403/FORBIDDEN`.
+
+
+
+## `PUT /accounts/subscription`
+
+Change which subscription the account uses. To cancel the subscription, see `DELETE /accounts/subscription`.
+
+### Request Headers
+
+This endpoint requires using a bearer token for authentication, like so:
+
+```
+Authorization: Bearer {your_token_goes_here}
+```
+
+### Request Body
+
+```json
+{
+	"subscription": {
+		"description": "The name of the subscription plan the account is switching to.",
+		"enum": ["basic", "standard", "premium"]
+	}
+}
+```
+
+### Response
+
+The server will respond with `HTTP 200/OK` if changing subscriptions succeeded. If the bearer token was invalid, the server will respond with `HTTP 403/FORBIDDEN`.
+
+
+
+## `DELETE /accounts/subscription`
+
+Cancel the account's subscription. The user will lose access to their NormFlix content, but their account still exists, so they can re-activate their subscription at any time.
+
+### Request Headers
+
+This endpoint requires using a bearer token for authentication, like so:
+
+```
+Authorization: Bearer {your_token_goes_here}
+```
+
+### Request Body
+
+No body is needed for this request.
+
+### Response
+
+The server will respond with `HTTP 200/OK` if cancelling the subscription succeeded. If the bearer token was invalid, the server will respond with `HTTP 403/FORBIDDEN`.
+
+
+
+## `PUT /accounts/email`
+
+Change the email associated with a specific account.
+
+### Request Headers
+
+This endpoint requires using a bearer token for authentication, like so:
+
+```
+Authorization: Bearer {your_token_goes_here}
+```
+
+
+
+## `PUT /accounts/password`
+
+Change the password associated with a specific account.
+
+### Request Headers
+
+This endpoint requires using a bearer token for authentication, like so:
+
+```
+Authorization: Bearer {your_token_goes_here}
+```
+
+
+
+
+
+# `/profiles/<name>/*` Endpoints
+
+These API endpoints are for getting the data of one specific profile from a user's account.
+
+
+
+## `POST /profiles/<name>`
+
+This endpoint allows a user to create a new profile on their account.
+
+### Request Headers
+
+This endpoint requires using a bearer token for authentication, like so:
+
+```
+Authorization: Bearer {your_token_goes_here}
+```
+
+
+
+## `DELETE /profiles/<name>`
+
+This endpoint allows a user to delete a profile from their account.
+
+### Request Headers
+
+This endpoint requires using a bearer token for authentication, like so:
+
+```
+Authorization: Bearer {your_token_goes_here}
+```
+
+
+
+## `PUT /profiles/<name>/name`
+
+This endpoint lets a user change the name for a profile on their account.
+
+### Request Headers
+
+This endpoint requires using a bearer token for authentication, like so:
+
+```
+Authorization: Bearer {your_token_goes_here}
+```
+
+
+
+
+
+# `/movies/*` Endpoints
+
+These API endpoints are for browsing the movie catalog and streaming movies.
+
+
+
+
+
+# `/shows/*` Endpoints
+
+These API endpoints are for browsing the TV shows on NormFlix and streaming episodes from them.
