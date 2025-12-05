@@ -39,16 +39,7 @@ No headers are necessary for this endpoint.
 
 ### Response
 
-If the request is successful, the server will respond with `HTTP 200/OK`. If the username or email for the account is already used, the server will respond with `HTTP 409/CONFLICT`, with this body:
-
-```json
-{
-	"conflicting_item": {
-		"description": "Whether the username, email address, or both have already been used for another NormFlix account.",
-		"enum": ["email", "username", "both"]
-	}
-}
-```
+If the request is successful, the server will respond with `HTTP 200/OK`. If the username or email for the account is already used, the server will respond with `HTTP 409/CONFLICT` instead.
 
 
 

@@ -6,6 +6,7 @@ from http import HTTPStatus
 import flask
 from flask import Response, request
 from flask.sansio.scaffold import T_route
+from psycopg import Connection
 from pydantic import BaseModel, ValidationError
 from werkzeug.exceptions import BadRequest, UnsupportedMediaType
 
@@ -18,6 +19,8 @@ class HttpCode(Response):
 
 	UNPROCESSIBLE_ENTITY: "HttpCode"
 	OK: "HttpCode"
+	INTERNAL_SERVER_ERROR: "HttpCode"
+	CONFLICT: "HttpCode"
 
 	def __init__(self, val: int | HTTPStatus):
 		super().__init__(status=val)
@@ -25,6 +28,8 @@ class HttpCode(Response):
 
 HttpCode.UNPROCESSIBLE_ENTITY = HttpCode(HTTPStatus.UNPROCESSABLE_ENTITY)
 HttpCode.OK = HttpCode(HTTPStatus.OK)
+HttpCode.INTERNAL_SERVER_ERROR = HttpCode(HTTPStatus.INTERNAL_SERVER_ERROR)
+HttpCode.CONFLICT = HttpCode(HTTPStatus.CONFLICT)
 
 
 class HttpCodeAndMessage(Response):
@@ -103,3 +108,11 @@ class Blueprint(flask.Blueprint):
 		Adds the `deserialize` argument to `@app.get`.
 		"""
 		return self.route(rule, deserialize, methods=["GET"], **options)
+
+
+def get_db() -> Connection:
+	"""
+	Gets the database connection from the global Flask app and returns it with
+	the correct type. This mostly helps out Python type-checkers.
+	"""
+	return flask.current_app.extensions["db"]

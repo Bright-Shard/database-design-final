@@ -26,14 +26,24 @@ Loosely speaking, the final project has to be able to:
 
 - [`docs/`](./docs) has the documentation for the API and database structure.
 - [`tests/`](./tests) has tests to verify the API works as intended.
-- [`src/`](./src) contains the actual source code for the API.
+- [`normflix/`](./normflix) contains the actual source code for the API.
 - [`bin/`](./bin) contains binaries for running the API, starting the database, etc.
 
 
 
 # Running NormFlix
 
-If you run [`src/main.py`](./src/main.py) it'll start the Postgres database and API server for you. So you can just run `python3 src/main.py` from inside this git repo.
+The scripts in [`bin/`](./bin) are for running NormFlix.
+
+For running NormFlix from one file, you can run `run.py`.
+
+For local development, I recommend using the `setup_db.py`, `start_api.py`, and `start_db.py` files instead. When you change code, you usually only have to restart one of those files, which means faster startup times, which means faster iteration speed.
+
+
+
+# Tests
+
+You can run all tests by running the [`tests/utils.py`](./tests/utils.py) file.
 
 
 
@@ -51,4 +61,4 @@ NormFlix needs:
 
 The API server is implemented in Python with Flask, and uses psycopg to talk to a PostgreSQL database. That database runs in a container, using either Docker or Podman.
 
-To serve the API and database, NormFlix will bind to the ports specified in [`src/config.py`](./src/config.py).
+To serve the API and database, NormFlix will bind to the ports specified in [`normflix/config.py`](./normflix/config.py).

@@ -1,4 +1,5 @@
 import subprocess
+from typing import Callable
 
 import psycopg
 
@@ -12,7 +13,9 @@ except FileNotFoundError:
 
 
 def download_postgres():
-	subprocess.run([CONTAINER_RUNTIME, "pull", "docker.io/postgres"])
+	subprocess.run(
+		[CONTAINER_RUNTIME, "pull", f"docker.io/postgres:{config.POSTGRES_VERSION}"]
+	)
 
 
 def start_container():
@@ -57,15 +60,18 @@ def setup():
 	columns, and constraints used by NormFlix.
 	"""
 	with psycopg.connect(config.POSTGRES_SETUP_CONN_URL, autocommit=True) as conn:
+		conn.execute(f"CREATE DATABASE {config.POSTGRES_DATABASE}")
+
+	with psycopg.connect(config.POSTGRES_RUN_CONN_URL, autocommit=True) as conn:
 		# user-related tables
-		conn.execute(f"CREATE DATABASE {config.POSTGRES_DATABASE}").execute(
+		conn.execute(
 			"""
 			CREATE TABLE subscriptions (
 				name text PRIMARY KEY,
 				max_profiles int NOT NULL,
 				base_price_dollars float NOT NULL
 			)
-			"""
+		"""
 		).execute(
 			"""
 			CREATE TABLE users (
@@ -184,3 +190,19 @@ def setup():
 			)
 			"""
 		)
+
+
+def reset():
+	"""
+	Deletes the database NormFlix uses.
+	"""
+	with psycopg.connect(config.POSTGRES_SETUP_CONN_URL, autocommit=True) as conn:
+		conn.execute(f"DROP DATABASE {config.POSTGRES_DATABASE}")
+
+
+def with_db(func: Callable[[psycopg.Connection], None]) -> Callable[[], None]:
+	def wrapped():
+		with psycopg.connect(config.POSTGRES_RUN_CONN_URL, autocommit=True) as conn:
+			func(conn)
+
+	return wrapped
