@@ -146,6 +146,21 @@ This endpoint requires using a bearer token for authentication, like so:
 Authorization: Bearer {your_token_goes_here}
 ```
 
+### Request Body
+
+```json
+{
+	"email": {
+		"description": "The new email to use for this account.",
+		"type": "email"
+	}
+}
+```
+
+### Response
+
+The server will respond with `HTTP 200/OK` if changing the email succeeded. If the bearer token was invalid, the server will respond with `HTTP 403/FORBIDDEN`.
+
 
 
 ## `PUT /accounts/password`
@@ -159,6 +174,21 @@ This endpoint requires using a bearer token for authentication, like so:
 ```
 Authorization: Bearer {your_token_goes_here}
 ```
+
+### Request Body
+
+```json
+{
+	"password": {
+		"description": "The new password to use for this account.",
+		"type": "string"
+	}
+}
+```
+
+### Response
+
+The server will respond with `HTTP 200/OK` if changing the password succeeded. If the bearer token was invalid, the server will respond with `HTTP 403/FORBIDDEN`.
 
 
 

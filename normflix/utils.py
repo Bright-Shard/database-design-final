@@ -1,6 +1,4 @@
 import base64
-import http
-import json
 import typing as t
 from functools import wraps
 from http import HTTPStatus
@@ -8,9 +6,8 @@ from uuid import UUID
 
 import flask
 from flask import Response, jsonify, request
-from flask.sansio.scaffold import T_route
 from psycopg import Connection
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 from werkzeug.exceptions import BadRequest, UnsupportedMediaType
 
 

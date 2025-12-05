@@ -1,10 +1,11 @@
 import base64
 import uuid
 from http import HTTPStatus
+from typing import Literal
 from uuid import UUID
 
 import flask
-from flask import Blueprint, Response
+from flask import Response
 from psycopg.errors import UniqueViolation
 from pydantic import BaseModel
 
@@ -89,7 +90,59 @@ def create_bearer_token(args: AccountTokenArgs):
 		)
 
 
-@bp.put("/email")
+class SetSubscriptionArgs(BaseModel):
+	subscription: Literal["basic", "standard", "premium"]
+
+
+@bp.put("/subscription")
+@deserialize(SetSubscriptionArgs)
 @auth()
-def set_email(auth: Auth) -> Response:
+def set_subscription(auth: Auth, args: SetSubscriptionArgs) -> Response:
+	with get_db().cursor() as cur:
+		cur.execute(
+			"UPDATE users SET subscription = %s WHERE user_id = %s",
+			(args.subscription, auth.user_id),
+		)
+	return HttpCode.OK
+
+
+@bp.delete("/subscription")
+@auth()
+def delete_subscription(auth: Auth) -> Response:
+	with get_db().cursor() as cur:
+		cur.execute(
+			"UPDATE users SET subscription = NULL WHERE user_id = %s",
+			(auth.user_id,),
+		)
+	return HttpCode.OK
+
+
+class SetEmailArgs(BaseModel):
+	email: str
+
+
+@bp.put("/email")
+@deserialize(SetEmailArgs)
+@auth()
+def set_email(auth: Auth, args: SetEmailArgs) -> Response:
+	with get_db().cursor() as cur:
+		cur.execute(
+			"UPDATE users SET email = %s WHERE user_id = %s", (args.email, auth.user_id)
+		)
+	return HttpCode.OK
+
+
+class SetPasswordArgs(BaseModel):
+	password: str
+
+
+@bp.put("/password")
+@deserialize(SetPasswordArgs)
+@auth()
+def set_password(auth: Auth, args: SetPasswordArgs) -> Response:
+	with get_db().cursor() as cur:
+		cur.execute(
+			"UPDATE users SET password_hash = %s WHERE user_id = %s",
+			(args.password, auth.user_id),
+		)
 	return HttpCode.OK

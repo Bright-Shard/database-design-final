@@ -74,6 +74,15 @@ def setup():
 		"""
 		).execute(
 			"""
+			INSERT INTO subscriptions
+				(name, max_profiles, base_price_dollars)
+			VALUES
+				('basic', 1, 5.0),
+				('standard', 5, 10.0),
+				('premium', 10, 20.0)
+			"""
+		).execute(
+			"""
 			CREATE TABLE users (
 				user_id uuid PRIMARY KEY,
 				username text NOT NULL UNIQUE,

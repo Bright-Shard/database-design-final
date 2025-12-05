@@ -30,7 +30,10 @@ def run_all_tests():
 		app = normflix.build_app(conn)
 		client = app.test_client()
 
-		for test in utils.ALL_TESTS:
+		# idk either tbh just go with it
+		import tests
+
+		for test in tests.utils.ALL_TESTS:
 			print(f"Running '{test.__module__}.{test.__name__}'")
 			test(app, client)
 			print("Succeeded")

@@ -4,3 +4,4 @@ These are features that I would like to implement if I actually ran this service
 - 2FA. It's just good for security.
 - Make `/accounts/new` actually validate that the email it receives is an email
 - Find a better way to setup the Postgres database user (e.g. prehashed password)
+- Actually hash user passwords instead of storing them unencrypted
