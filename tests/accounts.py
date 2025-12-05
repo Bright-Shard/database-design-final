@@ -3,7 +3,7 @@ from http import HTTPStatus
 from flask.app import Flask
 from flask.testing import FlaskClient
 
-if __package__ == None:
+if __package__ is None:
 	import utils
 	from utils import normflix_test
 else:

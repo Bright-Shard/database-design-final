@@ -333,9 +333,11 @@ If the bearer token was invalid, the server will respond with `HTTP 403/FORBIDDE
 
 
 
-## `PUT /profiles/<name>/progress`
+## `POST /profiles/<name>/progress` & `PUT /profiles/<name>/progress`
 
-Set the watch progress for a profile on a particular piece of media.
+Create or update the watch progress for a profile on a particular piece of media.
+
+Both of these HTTP methods take the same arguments and have similar responses, but they do different things. The `POST` request creates the initial watch progress data, and `PUT` later updates it. Trying to send a `PUT` request to update watch progress without first sending the `POST` request is an error.
 
 ### Request Headers
 

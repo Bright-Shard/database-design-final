@@ -1,5 +1,6 @@
+import datetime
 from http import HTTPStatus
-from typing import Literal
+from typing import Literal, Optional
 from uuid import UUID
 
 from flask import Blueprint
@@ -75,22 +76,22 @@ def rename(auth: Auth, name: str, args: RenameProfileArgs):
 	return HttpCode.OK
 
 
-class WatchProgressArgs:
+class WatchProgressArgs(BaseModel):
 	kind: Literal["movie_watch_progress", "tv_show_watch_progress"]
-	movie_id: UUID | None
-	tv_show_id: UUID | None
-	tv_show_season: int | None
-	tv_show_episode: int | None
-	progress: int | None
+	movie_id: Optional[UUID] = None
+	tv_show_id: Optional[UUID] = None
+	tv_show_season: Optional[int] = None
+	tv_show_episode: Optional[int] = None
+	progress: Optional[int] = None
 
 
 @bp.get("/<string:name>/progress")
 @deserialize(WatchProgressArgs)
 @auth()
-def get_watch_progress(auth: Auth, name: str, args: WatchProgressArgs):
+def get_watch_progress(auth: Auth, args: WatchProgressArgs, name: str):
 	progress = None
 	with get_db().cursor() as cur:
-		if args.kind == "movie_watch_progress":
+		if args.kind == "tv_show_watch_progress":
 			if (
 				args.tv_show_id is None
 				or args.tv_show_season is None
@@ -111,7 +112,7 @@ def get_watch_progress(auth: Auth, name: str, args: WatchProgressArgs):
 			if query is None:
 				return HttpCodeAndJSON(HTTPStatus.OK, {"progress": None})
 			progress = query[0]
-		elif args.kind == "tv_show_watch_progress":
+		elif args.kind == "movie_watch_progress":
 			if args.movie_id is None:
 				return HttpCode.UNPROCESSIBLE_ENTITY
 
@@ -122,6 +123,8 @@ def get_watch_progress(auth: Auth, name: str, args: WatchProgressArgs):
 			if query is None:
 				return HttpCodeAndJSON(HTTPStatus.OK, {"progress": None})
 			progress = query[0]
+		else:
+			raise Exception("abort")
 
 		return HttpCodeAndJSON(HTTPStatus.OK, {"progress": progress})
 
@@ -129,12 +132,12 @@ def get_watch_progress(auth: Auth, name: str, args: WatchProgressArgs):
 @bp.put("/<string:name>/progress")
 @deserialize(WatchProgressArgs)
 @auth()
-def set_watch_progress(auth: Auth, name: str, args: WatchProgressArgs):
+def set_watch_progress(auth: Auth, args: WatchProgressArgs, name: str):
 	if args.progress is None:
 		return HttpCode.UNPROCESSIBLE_ENTITY
 
 	with get_db().cursor() as cur:
-		if args.kind == "movie_watch_progress":
+		if args.kind == "tv_show_watch_progress":
 			if (
 				args.tv_show_id is None
 				or args.tv_show_season is None
@@ -153,13 +156,59 @@ def set_watch_progress(auth: Auth, name: str, args: WatchProgressArgs):
 					args.tv_show_episode,
 				),
 			)
-		elif args.kind == "tv_show_watch_progress":
+		elif args.kind == "movie_watch_progress":
 			if args.movie_id is None:
 				return HttpCode.UNPROCESSIBLE_ENTITY
 
 			cur.execute(
 				"UPDATE watched_movies SET progress_seconds = %s WHERE (user_id = %s AND profile_name = %s AND movie_id = %s)",
 				(args.progress, auth.user_id, name, args.movie_id),
+			)
+
+		return HttpCode.OK
+
+
+@bp.post("/<string:name>/progress")
+@deserialize(WatchProgressArgs)
+@auth()
+def create_watch_progress(auth: Auth, args: WatchProgressArgs, name: str):
+	if args.progress is None:
+		return HttpCode.UNPROCESSIBLE_ENTITY
+
+	with get_db().cursor() as cur:
+		if args.kind == "tv_show_watch_progress":
+			if (
+				args.tv_show_id is None
+				or args.tv_show_season is None
+				or args.tv_show_episode is None
+			):
+				return HttpCode.UNPROCESSIBLE_ENTITY
+
+			cur.execute(
+				"INSERT INTO watched_tv_show_episodes (progress_seconds, user_id, profile_name, tv_show_id, season_number, episode_number, last_watched) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+				(
+					args.progress,
+					auth.user_id,
+					name,
+					args.tv_show_id,
+					args.tv_show_season,
+					args.tv_show_episode,
+					datetime.datetime.now(),
+				),
+			)
+		elif args.kind == "movie_watch_progress":
+			if args.movie_id is None:
+				return HttpCode.UNPROCESSIBLE_ENTITY
+
+			cur.execute(
+				"INSERT INTO watched_movies (progress_seconds, user_id, profile_name, movie_id, last_watched) VALUES (%s, %s, %s, %s, %s)",
+				(
+					args.progress,
+					auth.user_id,
+					name,
+					args.movie_id,
+					datetime.datetime.now(),
+				),
 			)
 
 		return HttpCode.OK

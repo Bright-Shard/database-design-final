@@ -6,6 +6,9 @@ POSTGRES_USER = "norm"
 POSTGRES_PASSWORD = "norm"
 POSTGRES_CONTAINER_NAME = "normflix"
 POSTGRES_VERSION = "latest"
+ADMIN_USER = "admin"
+ADMIN_PASSWORD = "admin"
+ADMIN_EMAIL = "admin@normflix.com"
 
 
 POSTGRES_SETUP_CONN_URL = (

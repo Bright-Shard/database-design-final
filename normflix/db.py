@@ -1,4 +1,5 @@
 import subprocess
+import uuid
 from typing import Callable
 
 import psycopg
@@ -94,6 +95,22 @@ def setup():
 				priv_write_user_data boolean NOT NULL
 			)
 			"""
+		).execute(
+			# Create admin account
+			"""
+			INSERT INTO users
+				(user_id, username, password_hash, email, priv_add_media, priv_read_user_data, priv_write_user_data)
+			VALUES (%s, %s, %s, %s, %s, %s, %s)
+			""",
+			(
+				uuid.uuid4(),
+				config.ADMIN_USER,
+				config.ADMIN_PASSWORD,
+				config.ADMIN_EMAIL,
+				True,
+				True,
+				True,
+			),
 		).execute(
 			"""
 			CREATE TABLE profiles (
