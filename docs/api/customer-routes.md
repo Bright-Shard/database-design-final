@@ -273,6 +273,119 @@ The server will reply with `HTTP 200/OK` if the request succeeds. If the bearer 
 
 
 
+## `GET /profiles/<name>/progress`
+
+Get the watch progress for a profile on a particular piece of media.
+
+### Request Headers
+
+This endpoint requires using a bearer token for authentication, like so:
+
+```
+Authorization: Bearer {your_token_goes_here}
+```
+
+### Request Body
+
+```json
+{
+	"kind": {
+		"description": "Which type of watch progress you want to get. `movie_watch_progress` gets the profile's watch progress through a particular movie. `tv_show_watch_progress` gets the profile's watch progress through a particular TV show episode.",
+		"enum": ["movie_watch_progress", "tv_show_watch_progress"]
+	},
+	"movie_id": {
+		"description": "The ID of the movie to get the watch progress of. Only necessary for requests where `kind = movie_watch_progress`.",
+		"type": "uuid",
+		"optional": true
+	},
+	"tv_show_id": {
+		"description": "The ID of the TV show that has the episode to get the watch progress of. Only necessary for requests where `kind = tv_show_watch_progress`.",
+		"type": "uuid",
+		"optional": true
+	},
+	"tv_show_season": {
+		"description": "The number of the TV show season that has the episode to get the watch progress of. Only necessary for requests where `kind = tv_show_watch_progress`.",
+		"type": "number",
+		"optional": true
+	},
+	"tv_show_episode": {
+		"description": "The number of the TV show episode to get the watch progress of. Only necessary for requests where `kind = tv_show_watch_progress`.",
+		"type": "number",
+		"optional": true
+	},
+}
+```
+
+### Response
+
+If the request was successful, the server will reply with `HTTP 200/OK` with the following content:
+
+```json
+{
+	"progress": {
+		"description": "How far the profile made it into the requested piece of media, in seconds. Will be set to null if the profile hasn't started watching this media.",
+		"type": "number"
+	}
+}
+```
+
+If the bearer token was invalid, the server will respond with `HTTP 403/FORBIDDEN`.
+
+
+
+## `PUT /profiles/<name>/progress`
+
+Set the watch progress for a profile on a particular piece of media.
+
+### Request Headers
+
+This endpoint requires using a bearer token for authentication, like so:
+
+```
+Authorization: Bearer {your_token_goes_here}
+```
+
+### Request Body
+
+```json
+{
+	"kind": {
+		"description": "Which type of watch progress you want to set. `movie_watch_progress` sets the profile's watch progress through a particular movie. `tv_show_watch_progress` sets the profile's watch progress through a particular TV show episode.",
+		"enum": ["movie_watch_progress", "tv_show_watch_progress"]
+	},
+	"movie_id": {
+		"description": "The ID of the movie to get the watch progress of. Only necessary for requests where `kind = movie_watch_progress`.",
+		"type": "uuid",
+		"optional": true
+	},
+	"tv_show_id": {
+		"description": "The ID of the TV show that has the episode to get the watch progress of. Only necessary for requests where `kind = tv_show_watch_progress`.",
+		"type": "uuid",
+		"optional": true
+	},
+	"tv_show_season": {
+		"description": "The number of the TV show season that has the episode to get the watch progress of. Only necessary for requests where `kind = tv_show_watch_progress`.",
+		"type": "number",
+		"optional": true
+	},
+	"tv_show_episode": {
+		"description": "The number of the TV show episode to get the watch progress of. Only necessary for requests where `kind = tv_show_watch_progress`.",
+		"type": "number",
+		"optional": true
+	},
+	"progress": {
+		"description": "How much of the piece of media that this profile has watched, in seconds.",
+		"type": "number"
+	}
+}
+```
+
+### Response
+
+If the request was successful, the server will reply with `HTTP 200/OK`. If the bearer token was invalid, the server will respond with `HTTP 403/FORBIDDEN`.
+
+
+
 
 
 # `/movies/*` Endpoints

@@ -158,22 +158,27 @@ def setup():
 			"""
 			CREATE TABLE watched_movies (
 				user_id uuid NOT NULL REFERENCES users (user_id),
+				profile_name text NOT NULL,
 				progress_seconds bigint NOT NULL,
 				last_watched timestamp NOT NULL,
-				movie_id uuid NOT NULL REFERENCES movies (movie_id)
+				movie_id uuid NOT NULL REFERENCES movies (movie_id),
+
+				FOREIGN KEY (user_id, profile_name) REFERENCES profiles (user_id, profile_name)
 			)
 			"""
 		).execute(
 			"""
 			CREATE TABLE watched_tv_show_episodes (
 				user_id uuid NOT NULL REFERENCES users (user_id),
+				profile_name text NOT NULL,
 				progress_seconds bigint NOT NULL,
 				last_watched timestamp NOT NULL,
 				tv_show_id uuid NOT NULL REFERENCES tv_shows (tv_show_id),
 				season_number int NOT NULL,
 				episode_number int NOT NULL,
 
-				FOREIGN KEY (tv_show_id, season_number, episode_number) REFERENCES tv_show_episodes (tv_show_id, season_number, number)
+				FOREIGN KEY (tv_show_id, season_number, episode_number) REFERENCES tv_show_episodes (tv_show_id, season_number, number),
+				FOREIGN KEY (user_id, profile_name) REFERENCES profiles (user_id, profile_name)
 			)
 			"""
 		)
