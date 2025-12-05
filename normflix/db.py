@@ -76,7 +76,7 @@ def setup():
 			"""
 			CREATE TABLE users (
 				user_id uuid PRIMARY KEY,
-				user_name text NOT NULL UNIQUE,
+				username text NOT NULL UNIQUE,
 				password_hash text NOT NULL,
 				email text NOT NULL UNIQUE,
 				subscription text REFERENCES subscriptions (name),
@@ -91,6 +91,13 @@ def setup():
 				user_id uuid NOT NULL REFERENCES users (user_id),
 				profile_name text NOT NULL UNIQUE,
 				active boolean NOT NULL
+			)
+			"""
+		).execute(
+			"""
+			CREATE TABLE bearer_tokens (
+				token uuid PRIMARY KEY,
+				user_id uuid NOT NULL REFERENCES users (user_id)
 			)
 			"""
 		)

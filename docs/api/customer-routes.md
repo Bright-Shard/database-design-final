@@ -59,8 +59,8 @@ No headers are necessary for this endpoint.
 		"description": "The username of the account to login to & generate a new API key for.",
 		"type": "string"
 	},
-	"password_hash": {
-		"description": "The hash of the user's password to authenticate with.",
+	"password": {
+		"description": "The user's password to authenticate with.",
 		"type": "string"
 	}
 }
@@ -79,7 +79,7 @@ If the request is successful, the server will respond with `HTTP 200/OK`, with t
 }
 ```
 
-If the request used bad credentials, the server will respond with `HTTP 403/FORBIDDEN`.
+If the request used bad credentials, the server will respond with `HTTP 401/UNAUTHORIZED`.
 
 
 

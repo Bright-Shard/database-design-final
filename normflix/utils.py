@@ -1,10 +1,13 @@
+import base64
 import http
 import json
 import typing as t
+from functools import wraps
 from http import HTTPStatus
+from uuid import UUID
 
 import flask
-from flask import Response, request
+from flask import Response, jsonify, request
 from flask.sansio.scaffold import T_route
 from psycopg import Connection
 from pydantic import BaseModel, ValidationError
@@ -21,6 +24,7 @@ class HttpCode(Response):
 	OK: "HttpCode"
 	INTERNAL_SERVER_ERROR: "HttpCode"
 	CONFLICT: "HttpCode"
+	UNAUTHORIZED: "HttpCode"
 
 	def __init__(self, val: int | HTTPStatus):
 		super().__init__(status=val)
@@ -30,6 +34,7 @@ HttpCode.UNPROCESSIBLE_ENTITY = HttpCode(HTTPStatus.UNPROCESSABLE_ENTITY)
 HttpCode.OK = HttpCode(HTTPStatus.OK)
 HttpCode.INTERNAL_SERVER_ERROR = HttpCode(HTTPStatus.INTERNAL_SERVER_ERROR)
 HttpCode.CONFLICT = HttpCode(HTTPStatus.CONFLICT)
+HttpCode.UNAUTHORIZED = HttpCode(HTTPStatus.UNAUTHORIZED)
 
 
 class HttpCodeAndMessage(Response):
@@ -42,72 +47,77 @@ class HttpCodeAndMessage(Response):
 		super().__init__(response=msg, status=code)
 
 
-class Blueprint(flask.Blueprint):
-	"""
-	Adds some utilities to the default Flask `Blueprint` class.
-	"""
+def HttpCodeAndJSON(code: int | HTTPStatus, msg: dict) -> Response:
+	response = jsonify(msg)
+	response.status_code = code
+	return response
 
-	def route(self, rule: str, deserialize: type, **options: t.Any):
-		"""
-		Redefines the `@app.route` decorator to add a `deserialize` arg. You can
-		pass a Pydantic class in that argument, and this decorator will
-		automatically deserialize any client-provided JSON into that class.
 
-		# Example
-		```py
-		import pydantic
-		import json
+class Auth:
+	def __init__(self, user_id: UUID):
+		self.user_id = user_id
 
-		class MyApiArguments(pydantic.BaseModel):
-			some_arg: str
-			some_number: int
 
-		@app.route("/endpoint", deserialize=MyApiArguments, methods=["POST"])
-		def handler(args: MyApiArguments):
-			# `args` will now be automatically deserialized from JSON to
-			# `MyApiArguments` for you
-			# If there's any errors with the JSON, the Pydantic errors are
-			# automatically sent back to the client
-			print(f"Got args {json.dumps(args)}")
-		```
-		"""
+type Route = t.Callable[..., Response]
+type RouteDecorator = t.Callable[[Route], Route]
 
-		def decorator(handler: t.Callable[..., Response]):
-			def wrapper() -> Response:
-				# Try to get JSON from the client's request, or simply use an
-				# empty dictionary if there isn't any
-				try:
-					args = request.get_json(force=True)
-				except (BadRequest, UnsupportedMediaType):
-					args = {}
 
-				# Try to create an instance of the Pydantic class with that JSON
-				try:
-					val = deserialize(**args)
-				except ValidationError as e:
-					# If it fails show the Pydantic errors to the client so they
-					# know what fields are missing
-					return HttpCodeAndMessage(HTTPStatus.UNPROCESSABLE_ENTITY, e.json())
+def auth(
+	error_code: HttpCode = HttpCode.UNAUTHORIZED,
+) -> RouteDecorator:
+	def decorator(func: Route) -> Route:
+		@wraps(func)
+		def wrapper(*args, **kwargs):
+			if "Authorization" not in request.headers:
+				return error_code
+			token = request.headers["Authorization"]
+			if not token.startswith("Bearer "):
+				return error_code
+			token = token[len("Bearer ") :]
 
-				# Otherwise call the route handler as normal
-				return handler(val)
+			conn = get_db()
+			with conn.cursor() as cur:
+				query = cur.execute(
+					"SELECT user_id FROM bearer_tokens WHERE token = %s",
+					(UUID(bytes=base64.urlsafe_b64decode(token)),),
+				).fetchone()
+				if query is None:
+					return error_code
 
-			# Call the original route method
-			return super(Blueprint, self).route(rule, **options)(wrapper)
+				user_id = query[0]
 
-		return decorator
+			return func(Auth(user_id), *args, **kwargs)
 
-	def post(self, rule: str, deserialize: type, **options: t.Any):
-		"""
-		Adds the `deserialize` argument to `@app.post`.
-		"""
-		return self.route(rule, deserialize, methods=["POST"], **options)
+		return wrapper
 
-	def get(self, rule: str, deserialize: type, **options: t.Any):
-		"""
-		Adds the `deserialize` argument to `@app.get`.
-		"""
-		return self.route(rule, deserialize, methods=["GET"], **options)
+	return decorator
+
+
+def deserialize(ty: type) -> RouteDecorator:
+	def decorator(func: Route) -> Route:
+		@wraps(func)
+		def wrapper(*args, **kwargs):
+			# Try to get JSON from the client's request, or simply use an
+			# empty dictionary if there isn't any
+			try:
+				json = request.get_json(force=True)
+			except (BadRequest, UnsupportedMediaType):
+				json = {}
+
+			# Try to create an instance of the Pydantic class with that JSON
+			try:
+				val = ty(**json)
+			except ValidationError as e:
+				# If it fails show the Pydantic errors to the client so they
+				# know what fields are missing
+				return HttpCodeAndMessage(HTTPStatus.UNPROCESSABLE_ENTITY, e.json())
+
+			# Otherwise call the route as normal
+			return func(val, *args, **kwargs)
+
+		return wrapper
+
+	return decorator
 
 
 def get_db() -> Connection:
