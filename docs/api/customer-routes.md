@@ -200,7 +200,7 @@ These API endpoints are for getting the data of one specific profile from a user
 
 
 
-## `POST /profiles/<name>`
+## `POST /profiles/<name>/new`
 
 This endpoint allows a user to create a new profile on their account.
 
@@ -211,6 +211,14 @@ This endpoint requires using a bearer token for authentication, like so:
 ```
 Authorization: Bearer {your_token_goes_here}
 ```
+
+### Request Body
+
+This endpoint doesn't need a body.
+
+### Response
+
+The server will reply with `HTTP 200/OK` if the request succeeds. If the user cannot add any more profiles to their account (because they're at the max for their subscription plan), the server will reply with `HTTP 426/UPGRADE REQUIRED`. If there's already a profile on this account with the same name, the server will reply with `HTTP 409/CONFLICT`. If the bearer token was invalid, the server will respond with `HTTP 403/FORBIDDEN`.
 
 
 
@@ -226,6 +234,14 @@ This endpoint requires using a bearer token for authentication, like so:
 Authorization: Bearer {your_token_goes_here}
 ```
 
+### Request Body
+
+This endpoint doesn't need a body.
+
+### Response
+
+The server will reply with `HTTP 200/OK` if the request succeeds. If the bearer token was invalid, the server will respond with `HTTP 403/FORBIDDEN`.
+
 
 
 ## `PUT /profiles/<name>/name`
@@ -239,6 +255,21 @@ This endpoint requires using a bearer token for authentication, like so:
 ```
 Authorization: Bearer {your_token_goes_here}
 ```
+
+### Request Body
+
+```json
+{
+	"name": {
+		"description": "The new name to give the profile.",
+		"type": "string"
+	}
+}
+```
+
+### Response
+
+The server will reply with `HTTP 200/OK` if the request succeeds. If the bearer token was invalid, the server will respond with `HTTP 403/FORBIDDEN`.
 
 
 

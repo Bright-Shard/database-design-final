@@ -98,8 +98,9 @@ def setup():
 			"""
 			CREATE TABLE profiles (
 				user_id uuid NOT NULL REFERENCES users (user_id),
-				profile_name text NOT NULL UNIQUE,
-				active boolean NOT NULL
+				profile_name text NOT NULL,
+
+				UNIQUE (user_id, profile_name)
 			)
 			"""
 		).execute(

@@ -5,3 +5,6 @@ These are features that I would like to implement if I actually ran this service
 - Make `/accounts/new` actually validate that the email it receives is an email
 - Find a better way to setup the Postgres database user (e.g. prehashed password)
 - Actually hash user passwords instead of storing them unencrypted
+- Handle users having more profiles than they're allowed to have after downgrading their subscription (e.g. user has 7 profiles on premium, then downgrades to basic)
+- Allow deleting accounts
+	- Would also need to delete all bearer tokens for the deleted account

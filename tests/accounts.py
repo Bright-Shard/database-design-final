@@ -15,6 +15,9 @@ import normflix as normflix
 
 @normflix_test
 def new_account(app: Flask, client: FlaskClient):
+	"""
+	Test an example API flow for when a new user signs up.
+	"""
 	response = client.post(
 		"/accounts/new",
 		json={"username": "test", "password": "password", "email": "bruh"},
